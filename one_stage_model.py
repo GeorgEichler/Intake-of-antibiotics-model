@@ -32,6 +32,7 @@ for dosis_time in intake_times:
 plt.plot(t, b, label = 'Antibiotics')
 plt.xlabel('t in h')
 plt.ylabel('b in mg')
+plt.title('One stage model for antibiotics ingestion')
 plt.legend()
 
 plt.show()
