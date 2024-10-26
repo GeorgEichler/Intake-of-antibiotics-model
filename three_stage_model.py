@@ -46,7 +46,7 @@ def simulate_three_stage_model(y0,F,k12,k23,k32,k,tau,dose_times, end_time):
     return t, S, B, T
 
 #Define parameters
-
+y0 = [0,0,0]
 k12 = 1
 k23 = 1
 k32 = 1
