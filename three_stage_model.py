@@ -67,4 +67,5 @@ plt.plot(t, T, label = 'Tissue')
 
 plt.xlabel('t')
 plt.ylabel('S,B,T')
+plt.legend()
 plt.show()
