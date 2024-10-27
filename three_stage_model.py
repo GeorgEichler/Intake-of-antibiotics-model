@@ -5,9 +5,6 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 
 
-
-
-
 def three_stage_model(t,y,F,k12,k23,k32,k):
     #unpack state variables
     S, B, T = y
@@ -47,25 +44,27 @@ def simulate_three_stage_model(y0,F,k12,k23,k32,k,tau,dose_times, end_time):
 
 #Define parameters
 y0 = [0,0,0]
-k12 = 1
+k12 = 0.5
 k23 = 1
 k32 = 1
-k   = 1
+T12 = 1.5
+k   = np.log(2)/T12
 tau = 24
 
-dose_times = np.array([6, 12, 18])
+dose_times = np.arange(6, 24*7 + 1, 6)
+end_time = 24*8
 
 #bioavailibility
 F = 0.8
 
 t, S, B, T = simulate_three_stage_model(y0, F, k12, k23, k32, k, tau, 
-                                        dose_times, end_time = 24)
+                                        dose_times, end_time)
 
-plt.plot(t, S, label = 'Stomach')
+plt.plot(t, S, label = 'Stomach',alpha = 0.5)
 plt.plot(t, B, label = 'Bloodstream')
 plt.plot(t, T, label = 'Tissue')
 
 plt.xlabel('t')
 plt.ylabel('S,B,T')
-plt.legend()
+plt.legend(loc= 'upper right')
 plt.show()
