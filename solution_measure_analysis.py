@@ -1,6 +1,7 @@
 from first_order_two_stage_model import simulate_two_stage_ode
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 T12 = 1.5         #half-life of antibiotica in [h]
 k = np.log(2)/T12 #degredation rate of antibiotica in [1/h]
@@ -25,29 +26,77 @@ plt.xlabel('t')
 plt.ylabel('s,b')
 plt.title('Two stage model')
 plt.legend()
-print(f'Minima: {minima}')
-print(f'Maxima: {maxima}')
-print(f'Area under the curve {b_auc}')
-print(f'Means: {means}')
-print(f'Time to peak {time_to_peak}')
 
 plt.figure()
 
-timesteps = np.arange(1, 25)
-minimas = []
-maximas = []
+dose_intervals = np.arange(1, 12, 0.5)
+minima_list = []
+maxima_list = []
+mean_list   = []
 
-for step in timesteps:
-    dose_times = np.arange(1, 24*7, step)
+for step in dose_intervals:
+    dose_times = np.arange(1, 24*3, step)
 
     _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
+    
+    #Extract values where a steady state has been obtained
+    minima_list.append(minima[-2])
+    maxima_list.append(maxima[-2])
+    mean_list.append(means[-2])
 
-minimas = range(1,25)
-maximas = range(1,25)
+plt.scatter(dose_intervals, minima_list, label = 'minima')
+plt.scatter(dose_intervals, mean_list, label = 'mean')
+plt.plot(dose_intervals, mean_list)
+plt.scatter(dose_intervals, maxima_list, label = 'maxima')
 
-plt.scatter(timesteps, maximas, label = 'maxima')
-plt.scatter(timesteps, minimas, label = 'minima')
 plt.xlabel('Timesteps')
 plt.ylabel('Max/Min concentration')
 plt.legend()
+
+
+dose_intervals = np.arange(1, 12, 1)
+dose_amounts = np.arange(50, 500, 50)
+
+minima_values = np.zeros((len(dose_amounts), len(dose_intervals)))
+maxima_values = np.zeros((len(dose_amounts), len(dose_intervals)))
+mean_values   = np.zeros((len(dose_amounts), len(dose_intervals)))
+
+for i, dose_amount in enumerate(dose_amounts):
+    for j, interval in enumerate(dose_intervals):
+        dose_times = np.arange(1, 24*3, interval)
+
+        _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
+        
+        #Extract values where a steady state has been obtained
+        minima_values[i, j] = minima[-2]
+        maxima_values[i, j] = maxima[-2]
+        mean_values[i, j]   = means[-2]
+
+#Plot heatmaps with seaborn
+sns.set_theme(style='white',font_scale=1.0) # Seaborn style setting
+
+plt.figure()
+sns.heatmap(minima_values, annot=True, fmt=".2f", cmap ='viridis',
+            xticklabels=np.round(dose_intervals, 1), yticklabels=dose_amounts,
+            cbar_kws={'label': 'Minima concentration'})
+plt.title('Minima concentration')
+plt.xlabel('Dose interval')
+plt.ylabel('Dose amount')
+
+plt.figure()
+sns.heatmap(maxima_values, annot=True, fmt=".2f", cmap ='viridis',
+            xticklabels=np.round(dose_intervals, 1), yticklabels=dose_amounts,
+            cbar_kws={'label': 'Maxima concentration'})
+plt.title('Maxima concentration')
+plt.xlabel('Dose interval')
+plt.ylabel('Dose amount')
+
+plt.figure()
+sns.heatmap(mean_values, annot=True, fmt=".2f", cmap ='viridis',
+            xticklabels=np.round(dose_intervals, 1), yticklabels=dose_amounts,
+            cbar_kws={'label': 'Mean concentration'})
+plt.title('Mean concentration')
+plt.xlabel('Dose interval')
+plt.ylabel('Dose amount')
+
 plt.show()
