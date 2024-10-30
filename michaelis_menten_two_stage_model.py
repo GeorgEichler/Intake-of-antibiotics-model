@@ -13,6 +13,7 @@ def two_stage_Michaelis_Menten_ode(t, y, B, Vmax, km, a):
     return [dbdt, dsdt]
 '''
 
+#Michaelis-Menten kinetics for the absorption rate
 def two_stage_Michaelis_Menten_ode(t, y, B, Vmax, km, k):
     b, s = y
     dbdt = B*Vmax/(km + s)*s - k*b 
@@ -71,7 +72,7 @@ if __name__ == '__main__':
     tau = 24
     B = 0.8
     Vmax = 10
-    km = 2000
+    km = 20
     T12 = 1.5
     k = np.log(2)/T12
 
