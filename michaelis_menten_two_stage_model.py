@@ -71,7 +71,7 @@ if __name__ == '__main__':
     tau = 24
     B = 0.8
     Vmax = 10
-    km = 2
+    km = 2000
     T12 = 1.5
     k = np.log(2)/T12
 
@@ -80,8 +80,8 @@ if __name__ == '__main__':
     km = km/D
     k = k*tau
 
-    dose_times = np.array([6,12,18,24])
-    end_time = 48
+    dose_times = np.arange(6, 24*3+1, 6)
+    end_time = 24*4
     
 
     t, b, s, _, _, _, _, _ = simulate_two_stage_Michaelis_Menten_ode(y0, tau, B, Vmax, km, k, dose_times, end_time)
@@ -117,9 +117,9 @@ if __name__ == '__main__':
         ax.autoscale_view()
         fig.canvas.draw_idle()
 
-        #Attach update function to slider
-        slider_Vmax.on_changed(update)
-        slider_km.on_changed(update)
-        slider_k.on_changed(update)
+    #Attach update function to slider
+    slider_Vmax.on_changed(update)
+    slider_km.on_changed(update)
+    slider_k.on_changed(update)
 
     plt.show()
