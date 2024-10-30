@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp, simpson
-from matplotlib.widgets import Slider, Button
+from matplotlib.widgets import Slider
 
 def two_stage_ode(t, y, B, a, k):
     b, s = y
@@ -57,91 +57,57 @@ def simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time):
     return t, b, s, minima, maxima, b_auc, means, time_to_peak
 
 
-T12 = 1.5         #half-life of antibiotica in [h]
-k = np.log(2)/T12 #degredation rate of antibiotica in [1/h]
-B = 0.8           #bioavailibility
-a = 1             #absorption rate of antibiotics in the stomach [in 1/h] (need same units as k)
+if __name__ == '__main__':
 
-D = 100           #dosis of an antibiotics pill in [mg]
-tau = 24          #rescaling with respect to [24h]
+    T12 = 1.5         #half-life of antibiotica in [h]
+    k = np.log(2)/T12 #degredation rate of antibiotica in [1/h]
+    B = 0.8           #bioavailibility
+    a = 1             #absorption rate of antibiotics in the stomach [in 1/h] (need same units as k)
 
-dose_times = np.arange(6, 24*3 + 1, 6)
-end_time = 24*4
-         
-y0 = [0,0] #initial condotions
+    D = 100           #dosis of an antibiotics pill in [mg]
+    tau = 24          #rescaling with respect to [24h]
 
-t, b, s, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
+    dose_times = np.arange(6, 24*3 + 1, 6)
+    end_time = 24*4
+            
+    y0 = [0,0] #initial condotions
 
-# Plotting setup
-fig, ax = plt.subplots()
-plt.subplots_adjust(left=0.25, bottom=0.25)
-b_line, = plt.plot(t, b, label='Antibiotics in blood flow')
-s_line, = plt.plot(t, s, label='Antibiotics in stomach', alpha=0.2)
-plt.xlabel('Time')
-plt.ylabel('Concentration')
-plt.legend()
+    t, b, s, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
 
-# Add sliders for parameters
-axcolor = 'lightgoldenrodyellow'
-ax_b = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor=axcolor)
-ax_a = plt.axes([0.25, 0.10, 0.65, 0.03], facecolor=axcolor)
-ax_k = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
+    # Plotting setup
+    fig, ax = plt.subplots()
+    plt.subplots_adjust(left=0.25, bottom=0.25)
+    b_line, = plt.plot(t, b, label='Antibiotics in blood flow')
+    s_line, = plt.plot(t, s, label='Antibiotics in stomach', alpha=0.2)
+    plt.xlabel('Time')
+    plt.ylabel('Concentration')
+    plt.legend()
 
-slider_b = Slider(ax_b, 'Bioavailability (B)', 0.1, 1.5, valinit=B)
-slider_a = Slider(ax_a, 'Absorption rate (a)', 0.1, 100, valinit=a)
-slider_k = Slider(ax_k, 'Degradation rate (k)', 0.01, 100, valinit=k)
+    # Add sliders for parameters
+    axcolor = 'lightgoldenrodyellow'
+    ax_b = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor=axcolor)
+    ax_a = plt.axes([0.25, 0.10, 0.65, 0.03], facecolor=axcolor)
+    ax_k = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
 
-# Update function for sliders
-def update(val):
-    new_b = slider_b.val
-    new_a = slider_a.val
-    new_k = slider_k.val
-    t, new_b_values, new_s_values, _, _, _, _, _ = simulate_two_stage_ode(y0, new_b, new_a, new_k, tau, dose_times, end_time)
-    b_line.set_ydata(new_b_values)
-    s_line.set_ydata(new_s_values)
-    ax.relim()
-    ax.autoscale_view()
-    fig.canvas.draw_idle()
+    slider_b = Slider(ax_b, 'Bioavailability (B)', 0.1, 1.5, valinit=B)
+    slider_a = Slider(ax_a, 'Absorption rate (a)', 0.1, 100, valinit=a)
+    slider_k = Slider(ax_k, 'Degradation rate (k)', 0.01, 100, valinit=k)
 
-# Attach update function to slider
-slider_b.on_changed(update)
-slider_a.on_changed(update)
-slider_k.on_changed(update)
+    # Update function for sliders
+    def update(val):
+        new_b = slider_b.val
+        new_a = slider_a.val
+        new_k = slider_k.val
+        t, new_b_values, new_s_values, _, _, _, _, _ = simulate_two_stage_ode(y0, new_b, new_a, new_k, tau, dose_times, end_time)
+        b_line.set_ydata(new_b_values)
+        s_line.set_ydata(new_s_values)
+        ax.relim()
+        ax.autoscale_view()
+        fig.canvas.draw_idle()
 
-plt.show()
+    # Attach update function to slider
+    slider_b.on_changed(update)
+    slider_a.on_changed(update)
+    slider_k.on_changed(update)
 
-'''
-plt.plot(t, b, label = 'Antibiotics in blood flow')
-plt.plot(t, s, label = 'Antibiotics in stomach',alpha = 0.2)
-
-
-plt.xlabel('t')
-plt.ylabel('s,b')
-plt.title('Two stage model')
-plt.legend()
-print(f'Minima: {minima}')
-print(f'Maxima: {maxima}')
-print(f'Area under the curve {b_auc}')
-print(f'Means: {means}')
-print(f'Time to peak {time_to_peak}')
-
-plt.figure()
-
-timesteps = np.arange(1, 25)
-minimas = []
-maximas = []
-
-for step in timesteps:
-    dose_times = np.arange(1, 24*7, step)
-
-    _, _, _, minima, maxima = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
-    minimas.append(minima)
-    maximas.append(maxima)
-
-
-plt.scatter(timesteps, maximas, label = 'maxima')
-plt.scatter(timesteps, minimas, label = 'minima')
-plt.xlabel('Timesteps')
-plt.ylabel('Max/Min concentration')
-plt.legend()
-'''
+    plt.show()
