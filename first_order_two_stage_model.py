@@ -48,7 +48,7 @@ def simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time):
 
 T12 = 1.5         #half-life of antibiotica in [h]
 k = np.log(2)/T12 #degredation rate of antibiotica in [1/h]
-B = 0.8 #bioavailibility
+B = 0.8           #bioavailibility
 a = 1             #absorption rate of antibiotics in the stomach [in 1/h] (need same units as k)
 #Nondimensionalization would be k*tau, a*tau
 
@@ -59,8 +59,6 @@ dose_times = np.arange(6, 24*7 + 1, 12)
 end_time = 24*8
          
 y0 = [0,0] #initial condotions
-
-km = 100
 
 t, b, s, minima, maxima = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
 
