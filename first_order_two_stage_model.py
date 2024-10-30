@@ -77,7 +77,7 @@ if __name__ == '__main__':
     # Plotting setup
     fig, ax = plt.subplots()
     plt.subplots_adjust(left=0.25, bottom=0.25)
-    b_line, = plt.plot(t, b, label='Antibiotics in blood flow')
+    b_line, = plt.plot(t, b, label='Antibiotics in bloodstream')
     s_line, = plt.plot(t, s, label='Antibiotics in stomach', alpha=0.2)
     plt.xlabel('Time')
     plt.ylabel('Concentration')
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     slider_b = Slider(ax_b, 'Bioavailability (B)', 0.1, 1.5, valinit=B)
     slider_a = Slider(ax_a, 'Absorption rate (a)', 0.1, 100, valinit=a)
-    slider_k = Slider(ax_k, 'Degradation rate (k)', 0.01, 100, valinit=k)
+    slider_k = Slider(ax_k, 'Elimination rate (k)', 0.01, 100, valinit=k)
 
     # Update function for sliders
     def update(val):
