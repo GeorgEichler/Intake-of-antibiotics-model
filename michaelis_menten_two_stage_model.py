@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp, simpson
 import matplotlib.pyplot as plt
-
+from matplotlib.widgets import Slider
 
 '''
 #Saturable absorption doesn't seem that promising as concentration level just rises
@@ -21,7 +21,7 @@ def two_stage_Michaelis_Menten_ode(t, y, B, Vmax, km, k):
     return [dbdt, dsdt]
 
 
-def simulate_two_stage_Michaelis_Menten_ode(y0, tau, D, B, Vmax, km, k, dose_times, end_time):
+def simulate_two_stage_Michaelis_Menten_ode(y0, tau, B, Vmax, km, k, dose_times, end_time):
     t = np.array([])
     b = np.array([])
     s = np.array([])
@@ -33,10 +33,7 @@ def simulate_two_stage_Michaelis_Menten_ode(y0, tau, D, B, Vmax, km, k, dose_tim
     b_auc =        []
     time_to_peak = []
 
-    #non-dimensionalize parameters
-    Vmax = Vmax*tau/D
-    km = km/D
-    k = k*tau
+    
     dose_times = 1/tau*dose_times
     dose_interval = (1/tau)*dose_interval
     end_time = end_time/tau
@@ -68,25 +65,61 @@ def simulate_two_stage_Michaelis_Menten_ode(y0, tau, D, B, Vmax, km, k, dose_tim
 
     return t, b, s, minima, maxima, b_auc, means, time_to_peak
 
-y0 = [0,0]
-D = 100
-tau = 24
-B = 0.8
-Vmax = 10
-km = 2
-T12 = 1.5
-k = np.log(2)/T12
-dose_times = np.array([6,12,18,24])
-end_time = 48
- 
+if __name__ == '__main__':
+    y0 = [0,0]
+    D = 100
+    tau = 24
+    B = 0.8
+    Vmax = 10
+    km = 2
+    T12 = 1.5
+    k = np.log(2)/T12
 
-t, b, s = simulate_two_stage_Michaelis_Menten_ode(y0, tau, D, B, Vmax, km, k, dose_times, end_time)
+    #non-dimensionalize parameters
+    Vmax = Vmax*tau/D
+    km = km/D
+    k = k*tau
 
+    dose_times = np.array([6,12,18,24])
+    end_time = 48
+    
 
-plt.plot(t,b, label = 'Bloodstream')
-plt.plot(t,s, label = 'Stomach')
+    t, b, s, _, _, _, _, _ = simulate_two_stage_Michaelis_Menten_ode(y0, tau, B, Vmax, km, k, dose_times, end_time)
 
-plt.xlabel('t')
-plt.ylabel('b,s')
-plt.legend()
-plt.show()
+    fig, ax = plt.subplots()
+    plt.subplots_adjust(left=0.25, bottom=0.25)
+    b_line, = plt.plot(t, b, label = 'Antibiotics in bloodstream')
+    s_line, = plt.plot(t, s, label = 'Antibiotics in stomach', alpha = 0.2)
+    plt.xlabel('Time')
+    plt.ylabel('Concentration')
+    plt.legend()
+
+    #Add sliders for parameters
+    axcolor = 'lightgoldenrodyellow'
+    ax_Vmax = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor=axcolor)
+    ax_km = plt.axes([0.25, 0.10, 0.65, 0.03], facecolor=axcolor)
+    ax_k = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
+
+    slider_Vmax = Slider(ax_Vmax, 'Maximal absorption (Vmax)', 0.1, 100, valinit=Vmax)
+    slider_km = Slider(ax_km, 'Half concentration (km)', 0.1, 100, valinit=km)
+    slider_k = Slider(ax_k, 'Elimination rate (k)', 0.1, 100, valinit=k)
+
+    #Update function for sliders
+    def update(val):
+        new_Vmax = slider_Vmax.val 
+        new_km = slider_km.val
+        new_k = slider_k.val
+        t, new_b_values, new_s_values, _, _, _, _, _ = simulate_two_stage_Michaelis_Menten_ode(y0, tau, B, new_Vmax, new_km,
+                                                                                               new_k, dose_times, end_time)
+        b_line.set_ydata(new_b_values)
+        s_line.set_ydata(new_s_values)
+        ax.relim()
+        ax.autoscale_view()
+        fig.canvas.draw_idle()
+
+        #Attach update function to slider
+        slider_Vmax.on_changed(update)
+        slider_km.on_changed(update)
+        slider_k.on_changed(update)
+
+    plt.show()
