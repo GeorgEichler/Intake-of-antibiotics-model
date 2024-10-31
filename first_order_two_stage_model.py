@@ -21,9 +21,6 @@ def simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time):
     b_auc  =       []
     time_to_peak = []
 
-    #non-dimensionalize parameters
-    a = tau*a
-    k = tau*k
     dose_interval = (1/tau)*dose_interval
     dose_times = (1/tau)*dose_times 
     end_time = (1/tau)*end_time
@@ -66,6 +63,10 @@ if __name__ == '__main__':
 
     D = 100           #dosis of an antibiotics pill in [mg]
     tau = 24          #rescaling with respect to [24h]
+
+    #non-dimensionalize parameters
+    a = tau*a
+    k = tau*k
 
     dose_times = np.arange(6, 24*3 + 1, 6)
     end_time = 24*4
