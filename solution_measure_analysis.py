@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def analyze_first_order(variable_name, variable_values, y0, **params):
+def analyze_model(variable_name, variable_values, y0, **params):
     minima_list = []
     maxima_list = []
     means_list  = []
@@ -14,9 +14,15 @@ def analyze_first_order(variable_name, variable_values, y0, **params):
         params[variable_name] = value
         
         dose_times = np.arange(1, 24*3, params["dose_interval"])
-        _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(
-            y0, params["B"], params["Vmax"], params["k"], params["tau"], dose_times, params["end_time"]
-        )
+
+        if params["method"] == "First order":
+            _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(
+                y0, params["B"], params["a"], params["k"], params["tau"], dose_times, params["end_time"]
+            )
+        elif params["method"] == "Michaelis-Menten":
+            _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_Michaelis_Menten_ode(
+                y0, params["tau"], params["B"], params["Vmax"], params["km"], params["k"], dose_times, params["end_time"]
+            )
 
         minima_list.append(minima[-2])
         maxima_list.append(maxima[-2])
@@ -24,14 +30,13 @@ def analyze_first_order(variable_name, variable_values, y0, **params):
     
     plt.figure()
     plt.scatter(variable_values, minima_list, label='minima')
-    plt.scatter(variable_values, mean_list, label='mean')
-    plt.plot(variable_values, mean_list)
+    plt.scatter(variable_values, means_list, label='mean')
+    plt.plot(variable_values, means_list)
     plt.scatter(variable_values, maxima_list, label='maxima')
     plt.xlabel(f'{variable_name} values')
     plt.ylabel('Max/Min concentration')
     plt.legend()
     plt.title(f'Concentration Analysis vs {variable_name}')
-    plt.show()
 
 
 T12 = 1.5         #half-life of antibiotica in [h]
@@ -53,7 +58,28 @@ km = km/D
 
 dose_times = np.arange(6, 24*3 + 1, 6)
 end_time = 24*4
-         
+
+params_first_order = {
+    "method": "First order",
+    "tau": tau,
+    "B": B,
+    "a": a,
+    "k": k,
+    "dose_interval": 6,
+    "end_time": end_time
+}
+
+params_Michaelis_Menten = {
+    "method": "Michaelis-Menten",
+    "tau": tau,
+    "B": B,
+    "Vmax": Vmax,
+    "km": km,
+    "k": k,
+    "dose_interval": 6,
+    "end_time": end_time,
+}
+
 y0 = [0,0] #initial condotions
 
 t, b, s, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
@@ -67,62 +93,11 @@ plt.ylabel('s,b')
 plt.title('Two stage model')
 plt.legend()
 
-#Concentration against the dose interval (only relevant for Michaelis-Menten)
-plt.figure()
-
-dose_intervals = np.arange(1, 12, 0.5)
-minima_list = []
-maxima_list = []
-mean_list   = []
-
-for step in dose_intervals:
-    dose_times = np.arange(1, 24*3, step)
-
-    _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_Michaelis_Menten_ode(y0, tau, B, Vmax, km, k, dose_times, end_time)
-    
-    #Extract values where a steady state has been obtained
-    minima_list.append(minima[-2])
-    maxima_list.append(maxima[-2])
-    mean_list.append(means[-2])
-
-plt.scatter(dose_intervals, minima_list, label = 'minima')
-plt.scatter(dose_intervals, mean_list, label = 'mean')
-plt.plot(dose_intervals, mean_list)
-plt.scatter(dose_intervals, maxima_list, label = 'maxima')
-
-plt.xlabel('Timesteps')
-plt.ylabel('Max/Min concentration')
-plt.legend()
+dose_intervals = np.arange(1, 12, 1)
+analyze_model("dose_interval", dose_intervals, y0, **params_first_order)
 
 plt.show()
 exit()
-#Concentration against dose amount
-plt.figure()
-
-dose_amounts = np.arange(50, 500, 50)
-minima_list = []
-maxima_list = []
-mean_list   = []
-
-for step in dose_amounts:
-    dose_times = np.arange(1, 24*3, 6)
-
-    _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
-    
-    #Extract values where a steady state has been obtained
-    minima_list.append(minima[-2])
-    maxima_list.append(maxima[-2])
-    mean_list.append(means[-2])
-
-plt.scatter(dose_amounts, minima_list, label = 'minima')
-plt.scatter(dose_amounts, mean_list, label = 'mean')
-plt.plot(dose_amounts, mean_list)
-plt.scatter(dose_amounts, maxima_list, label = 'maxima')
-
-plt.xlabel('Timesteps')
-plt.ylabel('Max/Min concentration')
-plt.legend()
-
 
 
 dose_intervals = np.arange(1, 12, 1)
