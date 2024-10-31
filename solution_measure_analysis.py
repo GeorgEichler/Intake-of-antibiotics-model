@@ -75,6 +75,7 @@ for i, dose_amount in enumerate(dose_amounts):
 #Plot heatmaps with seaborn
 sns.set_theme(style='white',font_scale=1.0) # Seaborn style setting
 
+#Minima heatmap
 plt.figure()
 sns.heatmap(minima_values, annot=True, fmt=".2f", cmap ='viridis',
             xticklabels=np.round(dose_intervals, 1), yticklabels=dose_amounts,
@@ -83,6 +84,7 @@ plt.title('Minima concentration')
 plt.xlabel('Dose interval')
 plt.ylabel('Dose amount')
 
+#Maxima heatmap
 plt.figure()
 sns.heatmap(maxima_values, annot=True, fmt=".2f", cmap ='viridis',
             xticklabels=np.round(dose_intervals, 1), yticklabels=dose_amounts,
@@ -91,6 +93,7 @@ plt.title('Maxima concentration')
 plt.xlabel('Dose interval')
 plt.ylabel('Dose amount')
 
+#Mean heatmap
 plt.figure()
 sns.heatmap(mean_values, annot=True, fmt=".2f", cmap ='viridis',
             xticklabels=np.round(dose_intervals, 1), yticklabels=dose_amounts,
