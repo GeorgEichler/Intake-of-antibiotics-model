@@ -5,6 +5,28 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
+def plot_model_concentration(y0, **params):
+
+    if params["method"] == "First order":
+        dose_times = np.arange(6, 24*3, params["dose_interval"])
+        t, b, s, _, _, _, _, _ = simulate_two_stage_ode(y0, params["tau"], params["B"], params["a"],
+                                                        params["k"], dose_times, params["end_time"])
+    elif params["method"] == "Michaelis-Menten":
+        dose_times = np.arange(6, 24*3, params["dose_interval"])
+        t, b, s, _, _, _, _, _ = simulate_two_stage_Michaelis_Menten_ode(y0, params["tau"], params["B"], params["Vmax"],
+                                                                        params["km"], params["k"], dose_times, params["end_time"])
+    
+    plt.figure()
+    plt.plot(t, b, label = 'Antibiotics in blood flow')
+    plt.plot(t, s, label = 'Antibiotics in stomach',alpha = 0.2)
+
+
+    plt.xlabel('t')
+    plt.ylabel('s,b')
+    plt.title('Two stage model')
+    plt.legend()
+
+    
 def analyze_model(variable_name, variable_values, y0, **params):
     #Input:
     # variable_name: str, the variable to analyze (e.g., "B", "Vmax", "km")
@@ -23,7 +45,7 @@ def analyze_model(variable_name, variable_values, y0, **params):
 
         if params["method"] == "First order":
             _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(
-                y0, params["B"], params["a"], params["k"], params["tau"], dose_times, params["end_time"]
+                y0, params["tau"], params["B"], params["a"], params["k"], dose_times, params["end_time"]
             )
         elif params["method"] == "Michaelis-Menten":
             _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_Michaelis_Menten_ode(
@@ -89,22 +111,15 @@ params_Michaelis_Menten = {
 
 y0 = [0,0] #initial condotions
 
-t, b, s, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
 
-plt.plot(t, b, label = 'Antibiotics in blood flow')
-plt.plot(t, s, label = 'Antibiotics in stomach',alpha = 0.2)
-
-
-plt.xlabel('t')
-plt.ylabel('s,b')
-plt.title('Two stage model')
-plt.legend()
+plot_model_concentration(y0, **params_first_order)
+plt.show()
+exit()
 
 dose_intervals = np.arange(1, 12, 1)
 analyze_model("dose_interval", dose_intervals, y0, **params_first_order)
 
-plt.show()
-exit()
+
 
 
 dose_intervals = np.arange(1, 12, 1)
@@ -118,7 +133,7 @@ for i, dose_amount in enumerate(dose_amounts):
     for j, interval in enumerate(dose_intervals):
         dose_times = np.arange(1, 24*3, interval)
 
-        _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
+        _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, tau, B, a, k, dose_times, end_time)
         
         #Extract values where a steady state has been obtained
         minima_values[i, j] = minima[-2]
