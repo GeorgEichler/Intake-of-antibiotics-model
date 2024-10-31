@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def analyze_first_oder(variable_name, variable_values, y0, **params):
+def analyze_first_order(variable_name, variable_values, y0, **params):
     minima_list = []
     maxima_list = []
     means_list  = []
