@@ -9,7 +9,7 @@ def two_stage_ode(t, y, B, a, k):
     dsdt = -a*s
     return [dbdt, dsdt]
 
-def simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time):
+def simulate_two_stage_ode(y0, tau, B, a, k, dose_times, end_time):
     t = np.array([])
     b = np.array([])
     s = np.array([])
@@ -73,7 +73,7 @@ if __name__ == '__main__':
             
     y0 = [0,0] #initial condotions
 
-    t, b, s, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
+    t, b, s, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, tau, B, a, k, dose_times, end_time)
 
     # Plotting setup
     fig, ax = plt.subplots()
@@ -86,20 +86,20 @@ if __name__ == '__main__':
 
     # Add sliders for parameters
     axcolor = 'lightgoldenrodyellow'
-    ax_b = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor=axcolor)
+    ax_B = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor=axcolor)
     ax_a = plt.axes([0.25, 0.10, 0.65, 0.03], facecolor=axcolor)
     ax_k = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
 
-    slider_b = Slider(ax_b, 'Bioavailability (B)', 0.1, 1.5, valinit=B)
+    slider_B = Slider(ax_B, 'Bioavailability (B)', 0.1, 1.5, valinit=B)
     slider_a = Slider(ax_a, 'Absorption rate (a)', 0.1, 100, valinit=a)
     slider_k = Slider(ax_k, 'Elimination rate (k)', 0.01, 100, valinit=k)
 
     # Update function for sliders
     def update(val):
-        new_b = slider_b.val
+        new_B = slider_B.val
         new_a = slider_a.val
         new_k = slider_k.val
-        t, new_b_values, new_s_values, _, _, _, _, _ = simulate_two_stage_ode(y0, new_b, new_a, new_k, tau, dose_times, end_time)
+        t, new_b_values, new_s_values, _, _, _, _, _ = simulate_two_stage_ode(y0, tau, new_B, new_a, new_k, dose_times, end_time)
         b_line.set_ydata(new_b_values)
         s_line.set_ydata(new_s_values)
         ax.relim()
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         fig.canvas.draw_idle()
 
     # Attach update function to slider
-    slider_b.on_changed(update)
+    slider_B.on_changed(update)
     slider_a.on_changed(update)
     slider_k.on_changed(update)
 
