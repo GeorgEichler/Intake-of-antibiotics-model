@@ -4,6 +4,36 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
+def analyze_first_oder(variable_name, variable_values, y0, **params):
+    minima_list = []
+    maxima_list = []
+    means_list  = []
+
+    for value in variable_values:
+        params[variable_name] = value
+        
+        dose_times = np.arange(1, 24*3, params["dose_interval"])
+        _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(
+            y0, params["B"], params["Vmax"], params["k"], params["tau"], dose_times, params["end_time"]
+        )
+
+        minima_list.append(minima[-2])
+        maxima_list.append(maxima[-2])
+        means_list.append(means[-2])
+    
+    plt.figure()
+    plt.scatter(variable_values, minima_list, label='minima')
+    plt.scatter(variable_values, mean_list, label='mean')
+    plt.plot(variable_values, mean_list)
+    plt.scatter(variable_values, maxima_list, label='maxima')
+    plt.xlabel(f'{variable_name} values')
+    plt.ylabel('Max/Min concentration')
+    plt.legend()
+    plt.title(f'Concentration Analysis vs {variable_name}')
+    plt.show()
+
+
 T12 = 1.5         #half-life of antibiotica in [h]
 k = np.log(2)/T12 #degredation rate of antibiotica in [1/h]
 B = 0.8           #bioavailibility
