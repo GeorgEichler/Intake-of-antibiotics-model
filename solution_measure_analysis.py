@@ -6,6 +6,9 @@ import seaborn as sns
 
 
 def plot_model_concentration(y0, **params):
+    #Input:
+    #y0 - initial conditions
+    # params - dictionary containing additional parameters (e.g., tau, dose_interval, end_time, method)
 
     if params["method"] == "First order":
         dose_times = np.arange(6, 24*3, params["dose_interval"])
