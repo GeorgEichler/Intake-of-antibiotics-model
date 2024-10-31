@@ -6,6 +6,12 @@ import seaborn as sns
 
 
 def analyze_model(variable_name, variable_values, y0, **params):
+    #Input:
+    # variable_name: str, the variable to analyze (e.g., "B", "Vmax", "km")
+    # variable_values: list, the values of the changing parameter to analyze
+    # y0: list, initial conditions for the ODE
+    # params: dict, additional parameters needed for the ODE (e.g., "tau", "dose_interval", "end_time", method)
+    # method parameter is either First order or Michaelis-Menten
     minima_list = []
     maxima_list = []
     means_list  = []
@@ -38,7 +44,7 @@ def analyze_model(variable_name, variable_values, y0, **params):
     plt.legend()
     plt.title(f'Concentration Analysis vs {variable_name}')
 
-
+#Set some parameters
 T12 = 1.5         #half-life of antibiotica in [h]
 k = np.log(2)/T12 #degredation rate of antibiotica in [1/h]
 B = 0.8           #bioavailibility
@@ -59,6 +65,7 @@ km = km/D
 dose_times = np.arange(6, 24*3 + 1, 6)
 end_time = 24*4
 
+#Create dictionaries for the two models to analyze
 params_first_order = {
     "method": "First order",
     "tau": tau,
