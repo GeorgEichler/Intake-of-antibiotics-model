@@ -1,4 +1,5 @@
 from first_order_two_stage_model import simulate_two_stage_ode
+from michaelis_menten_two_stage_model import simulate_two_stage_Michaelis_Menten_ode
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -8,8 +9,17 @@ k = np.log(2)/T12 #degredation rate of antibiotica in [1/h]
 B = 0.8           #bioavailibility
 a = 1             #absorption rate of antibiotics in the stomach [in 1/h] (need same units as k)
 
-D = 100           #dosis of an antibiotics pill in [mg]
+Vmax = 10
+km = 5
+
+D = 200           #dosis of an antibiotics pill in [mg]
 tau = 24          #rescaling with respect to [24h]
+
+#non-dimensionalize
+a = tau*a
+k = tau*k
+Vmax = Vmax*tau/D
+km = km/D
 
 dose_times = np.arange(6, 24*3 + 1, 6)
 end_time = 24*4
@@ -27,6 +37,7 @@ plt.ylabel('s,b')
 plt.title('Two stage model')
 plt.legend()
 
+#Concentration against the dose interval (only relevant for Michaelis-Menten)
 plt.figure()
 
 dose_intervals = np.arange(1, 12, 0.5)
@@ -37,7 +48,7 @@ mean_list   = []
 for step in dose_intervals:
     dose_times = np.arange(1, 24*3, step)
 
-    _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
+    _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_Michaelis_Menten_ode(y0, tau, B, Vmax, km, k, dose_times, end_time)
     
     #Extract values where a steady state has been obtained
     minima_list.append(minima[-2])
@@ -52,6 +63,36 @@ plt.scatter(dose_intervals, maxima_list, label = 'maxima')
 plt.xlabel('Timesteps')
 plt.ylabel('Max/Min concentration')
 plt.legend()
+
+plt.show()
+exit()
+#Concentration against dose amount
+plt.figure()
+
+dose_amounts = np.arange(50, 500, 50)
+minima_list = []
+maxima_list = []
+mean_list   = []
+
+for step in dose_amounts:
+    dose_times = np.arange(1, 24*3, 6)
+
+    _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, B, a, k, tau, dose_times, end_time)
+    
+    #Extract values where a steady state has been obtained
+    minima_list.append(minima[-2])
+    maxima_list.append(maxima[-2])
+    mean_list.append(means[-2])
+
+plt.scatter(dose_amounts, minima_list, label = 'minima')
+plt.scatter(dose_amounts, mean_list, label = 'mean')
+plt.plot(dose_amounts, mean_list)
+plt.scatter(dose_amounts, maxima_list, label = 'maxima')
+
+plt.xlabel('Timesteps')
+plt.ylabel('Max/Min concentration')
+plt.legend()
+
 
 
 dose_intervals = np.arange(1, 12, 1)
