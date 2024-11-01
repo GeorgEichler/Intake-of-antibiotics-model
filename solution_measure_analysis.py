@@ -60,14 +60,14 @@ def analyze_model(variable_name, variable_values, y0, **params):
         means_list.append(means[-2])
     
     plt.figure()
-    plt.scatter(variable_values, minima_list, label='minima')
-    plt.scatter(variable_values, means_list, label='mean')
-    plt.plot(variable_values, means_list)
-    plt.scatter(variable_values, maxima_list, label='maxima')
+    plt.scatter(variable_values, minima_list, label='minima',color='green')
+    plt.scatter(variable_values, means_list, label='mean',color='orange')
+    plt.plot(variable_values, means_list,color='orange')
+    plt.scatter(variable_values, maxima_list, label='maxima',color='red')
     plt.xlabel(f'{variable_name} values')
     plt.ylabel('Max/Min concentration')
     plt.legend()
-    plt.title(f'Concentration Analysis vs {variable_name}')
+    plt.title(f'Analysis ({params["method"]}) of {variable_name}')
 
 #Set some parameters
 T12 = 1.5         #half-life of antibiotica in [h]
@@ -91,6 +91,7 @@ dose_times = np.arange(6, 24*3 + 1, 6)
 end_time = 24*4
 
 #Create dictionaries for the two models to analyze
+#Dictionary with parameters for the first order model
 params_first_order = {
     "method": "First order",
     "tau": tau,
@@ -101,6 +102,7 @@ params_first_order = {
     "end_time": end_time
 }
 
+#Dictionary with parameters for the Michaelis-Menten Kinetics model
 params_Michaelis_Menten = {
     "method": "Michaelis-Menten",
     "tau": tau,
@@ -116,15 +118,27 @@ y0 = [0,0] #initial condotions
 
 
 plot_model_concentration(y0, **params_first_order)
-plt.show()
-exit()
 
 dose_intervals = np.arange(1, 12, 1)
 analyze_model("dose_interval", dose_intervals, y0, **params_first_order)
 
+absorption_values = np.arange(0.1, 10, 0.1)
+analyze_model("a",absorption_values, y0,**params_first_order)
 
+elimination_values = np.arange(0.1, 10, 0.1)
+analyze_model("k", elimination_values,y0,**params_first_order)
 
+Vmax_values = np.arange(0.1, 10, 0.1)
+analyze_model("Vmax",Vmax_values,y0,**params_Michaelis_Menten)
 
+km_values = np.arange(0.1, 10, 0.1)
+analyze_model("km", km_values,y0, **params_Michaelis_Menten)
+
+elimination_values = np.arange(0.1, 10, 0.1)
+analyze_model("k", elimination_values,y0,**params_Michaelis_Menten)
+
+plt.show()
+exit()
 dose_intervals = np.arange(1, 12, 1)
 dose_amounts = np.arange(50, 500, 50)
 
