@@ -68,11 +68,11 @@ def simulate_two_stage_Michaelis_Menten_ode(y0, tau, B, Vmax, km, k, dose_times,
 
 if __name__ == '__main__':
     y0 = [0,0]
-    D = 100
+    D = 250
     tau = 24
     B = 0.8
-    Vmax = 10
-    km = 20
+    Vmax = 1220
+    km = 287
     T12 = 1.5
     k = np.log(2)/T12
 
@@ -101,8 +101,8 @@ if __name__ == '__main__':
     ax_km = plt.axes([0.25, 0.10, 0.65, 0.03], facecolor=axcolor)
     ax_k = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
 
-    slider_Vmax = Slider(ax_Vmax, 'Maximal absorption (Vmax)', 0.1, 100, valinit=Vmax)
-    slider_km = Slider(ax_km, 'Half concentration (km)', 0.1, 100, valinit=km)
+    slider_Vmax = Slider(ax_Vmax, 'Maximal absorption (Vmax)', 0.1, 1000, valinit=Vmax)
+    slider_km = Slider(ax_km, 'Half concentration (km)', 0.01, 10, valinit=km)
     slider_k = Slider(ax_k, 'Elimination rate (k)', 0.1, 100, valinit=k)
 
     #Update function for sliders
