@@ -75,10 +75,10 @@ k = np.log(2)/T12 #degredation rate of antibiotica in [1/h]
 B = 0.8           #bioavailibility
 a = 1             #absorption rate of antibiotics in the stomach [in 1/h] (need same units as k)
 
-Vmax = 10
-km = 5
+Vmax = 1220
+km = 287
 
-D = 200           #dosis of an antibiotics pill in [mg]
+D = 250           #dosis of an antibiotics pill in [mg]
 tau = 24          #rescaling with respect to [24h]
 
 #non-dimensionalize
@@ -116,75 +116,135 @@ params_Michaelis_Menten = {
 
 y0 = [0,0] #initial condotions
 
+analyzing = False
+if analyzing:
+    plot_model_concentration(y0, **params_first_order)
 
-plot_model_concentration(y0, **params_first_order)
+    dose_intervals = np.arange(1, 12, 1)
+    analyze_model("dose_interval", dose_intervals, y0, **params_first_order)
 
-dose_intervals = np.arange(1, 12, 1)
-analyze_model("dose_interval", dose_intervals, y0, **params_first_order)
+    absorption_values = np.arange(0.1, 10, 0.1)
+    analyze_model("a",absorption_values, y0,**params_first_order)
 
-absorption_values = np.arange(0.1, 10, 0.1)
-analyze_model("a",absorption_values, y0,**params_first_order)
+    elimination_values = np.arange(0.1, 10, 0.1)
+    analyze_model("k", elimination_values,y0,**params_first_order)
 
-elimination_values = np.arange(0.1, 10, 0.1)
-analyze_model("k", elimination_values,y0,**params_first_order)
+    Vmax_values = np.arange(0.1, 10, 0.1)
+    analyze_model("Vmax",Vmax_values,y0,**params_Michaelis_Menten)
 
-Vmax_values = np.arange(0.1, 10, 0.1)
-analyze_model("Vmax",Vmax_values,y0,**params_Michaelis_Menten)
+    km_values = np.arange(0.1, 10, 0.1)
+    analyze_model("km", km_values,y0, **params_Michaelis_Menten)
 
-km_values = np.arange(0.1, 10, 0.1)
-analyze_model("km", km_values,y0, **params_Michaelis_Menten)
+    elimination_values = np.arange(0.1, 10, 0.1)
+    analyze_model("k", elimination_values,y0,**params_Michaelis_Menten)
 
-elimination_values = np.arange(0.1, 10, 0.1)
-analyze_model("k", elimination_values,y0,**params_Michaelis_Menten)
 
-plt.show()
-exit()
-dose_intervals = np.arange(1, 12, 1)
-dose_amounts = np.arange(50, 500, 50)
+heatmap = True
+if heatmap:
 
-minima_values = np.zeros((len(dose_amounts), len(dose_intervals)))
-maxima_values = np.zeros((len(dose_amounts), len(dose_intervals)))
-mean_values   = np.zeros((len(dose_amounts), len(dose_intervals)))
 
-for i, dose_amount in enumerate(dose_amounts):
-    for j, interval in enumerate(dose_intervals):
-        dose_times = np.arange(1, 24*3, interval)
+    #Varying absorption and elimination rate
+    annot = False
 
-        _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, tau, B, a, k, dose_times, end_time)
-        
-        #Extract values where a steady state has been obtained
-        minima_values[i, j] = minima[-2]
-        maxima_values[i, j] = maxima[-2]
-        mean_values[i, j]   = means[-2]
+    interval = 6
+    elimination_rates = np.arange(0.1, 1, 0.1)
+    absorption_rates = np.arange(0.1, 1, 0.1)
 
-#Plot heatmaps with seaborn
-sns.set_theme(style='white',font_scale=1.0) # Seaborn style setting
+    minima_values = np.zeros((len(absorption_rates), len(elimination_rates)))
+    maxima_values = np.zeros((len(absorption_rates), len(elimination_rates)))
+    mean_values   = np.zeros((len(absorption_rates), len(elimination_rates)))
 
-#Minima heatmap
-plt.figure()
-sns.heatmap(minima_values, annot=True, fmt=".2f", cmap ='viridis',
-            xticklabels=np.round(dose_intervals, 1), yticklabels=dose_amounts,
-            cbar_kws={'label': 'Minima concentration'})
-plt.title('Minima concentration')
-plt.xlabel('Dose interval')
-plt.ylabel('Dose amount')
+    for i, a in enumerate(absorption_rates):
+        for j, k in enumerate(elimination_rates):
+            dose_times = np.arange(1, 24*3, interval)
 
-#Maxima heatmap
-plt.figure()
-sns.heatmap(maxima_values, annot=True, fmt=".2f", cmap ='viridis',
-            xticklabels=np.round(dose_intervals, 1), yticklabels=dose_amounts,
-            cbar_kws={'label': 'Maxima concentration'})
-plt.title('Maxima concentration')
-plt.xlabel('Dose interval')
-plt.ylabel('Dose amount')
+            _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(y0, tau, B, a, k, dose_times, end_time)
+            
+            #Extract values where a steady state has been obtained
+            minima_values[i, j] = minima[-2]
+            maxima_values[i, j] = maxima[-2]
+            mean_values[i, j]   = means[-2]
 
-#Mean heatmap
-plt.figure()
-sns.heatmap(mean_values, annot=True, fmt=".2f", cmap ='viridis',
-            xticklabels=np.round(dose_intervals, 1), yticklabels=dose_amounts,
-            cbar_kws={'label': 'Mean concentration'})
-plt.title('Mean concentration')
-plt.xlabel('Dose interval')
-plt.ylabel('Dose amount')
+    #Plot heatmaps with seaborn
+    sns.set_theme(style='white',font_scale=1.0) # Seaborn style setting
+
+    #Minima heatmap
+    plt.figure()
+    sns.heatmap(minima_values, annot=annot, fmt=".2f", cmap ='viridis',
+                xticklabels=np.round(elimination_rates, 1), yticklabels=np.round(absorption_rates, 1),
+                cbar_kws={'label': 'Minima concentration'})
+    plt.title('Minima concentration')
+    plt.xlabel('Elimination rate')
+    plt.ylabel('Absorption rate')
+
+    #Maxima heatmap
+    plt.figure()
+    sns.heatmap(maxima_values, annot=annot, fmt=".2f", cmap ='viridis',
+                xticklabels=np.round(elimination_rates, 1), yticklabels=np.round(absorption_rates, 1),
+                cbar_kws={'label': 'Maxima concentration'})
+    plt.title('Maxima concentration')
+    plt.xlabel('Elimination rate')
+    plt.ylabel('Absorption rate')
+
+    #Mean heatmap
+    plt.figure()
+    sns.heatmap(mean_values, annot=annot, fmt=".2f", cmap ='viridis',
+                xticklabels=np.round(elimination_rates, 1), yticklabels=np.round(absorption_rates, 1),
+                cbar_kws={'label': 'Mean concentration'})
+    plt.title('Mean concentration')
+    plt.xlabel('Elimination rate')
+    plt.ylabel('Absorption rate')
+
+
+    Vmax_values = np.arange(1, 100, 1)
+    km_values = np.arange(1, 100, 1)
+
+    minima_values = np.zeros((len(km_values), len(Vmax_values)))
+    maxima_values = np.zeros((len(km_values), len(Vmax_values)))
+    mean_values   = np.zeros((len(km_values), len(Vmax_values)))
+
+    for i, km in enumerate(km_values):
+        for j, Vmax in enumerate(Vmax_values):
+            dose_times = np.arange(1, 24*3, interval)
+
+            _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_Michaelis_Menten_ode(y0, tau, B, Vmax, km, k,
+                                                                                                        dose_times,end_time)
+            
+            #Extract values where a steady state has been obtained
+            minima_values[i, j] = minima[-2]
+            maxima_values[i, j] = maxima[-2]
+            mean_values[i, j]   = means[-2]
+
+    #Plot heatmaps with seaborn
+    sns.set_theme(style='white',font_scale=1.0) # Seaborn style setting
+
+    #Minima heatmap
+    plt.figure()
+    sns.heatmap(minima_values, annot=annot, fmt=".2f", cmap ='viridis',
+                xticklabels=np.round(Vmax_values, 1), yticklabels=np.round(km_values, 1),
+                cbar_kws={'label': 'Minima concentration'})
+    plt.title('Minima concentration')
+    plt.xlabel('$V_{max}$')
+    plt.ylabel('$K_m$')
+
+    #Maxima heatmap
+    plt.figure()
+    sns.heatmap(maxima_values, annot=annot, fmt=".2f", cmap ='viridis',
+                xticklabels=np.round(Vmax_values, 1), yticklabels=np.round(km_values, 1),
+                cbar_kws={'label': 'Maxima concentration'})
+    plt.title('Maxima concentration')
+    plt.xlabel('$V_{max}$')
+    plt.ylabel('$K_m$')
+
+    #Mean heatmap
+    plt.figure()
+    sns.heatmap(mean_values, annot=annot, fmt=".2f", cmap ='viridis',
+                xticklabels=np.round(Vmax_values, 1), yticklabels=np.round(km_values, 1),
+                cbar_kws={'label': 'Mean concentration'})
+    plt.title('Mean concentration')
+    plt.xlabel('$V_{max}$')
+    plt.ylabel('$K_m$')
+
+
 
 plt.show()
