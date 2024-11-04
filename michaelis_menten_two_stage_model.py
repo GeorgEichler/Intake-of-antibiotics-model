@@ -89,8 +89,8 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots()
     plt.subplots_adjust(left=0.25, bottom=0.25)
-    b_line, = plt.plot(t, b, label = 'Antibiotics in bloodstream')
-    s_line, = plt.plot(t, s, label = 'Antibiotics in stomach', alpha = 0.2)
+    b_line, = plt.plot(t, b, label = 'Antibiotics in bloodstream', color = 'red')
+    s_line, = plt.plot(t, s, label = 'Antibiotics in stomach', alpha = 0.2, color = 'blue')
     plt.xlabel('Time')
     plt.ylabel('Concentration')
     plt.legend()

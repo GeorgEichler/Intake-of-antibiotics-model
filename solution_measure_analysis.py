@@ -20,8 +20,8 @@ def plot_model_concentration(y0, **params):
                                                                         params["km"], params["k"], dose_times, params["end_time"])
     
     plt.figure()
-    plt.plot(t, b, label = 'Antibiotics in blood flow')
-    plt.plot(t, s, label = 'Antibiotics in stomach',alpha = 0.2)
+    plt.plot(t, b, label = 'Antibiotics in bloodstream', color = 'red')
+    plt.plot(t, s, label = 'Antibiotics in stomach',alpha = 0.2, color = 'blue')
 
 
     plt.xlabel('t')
