@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def plot_model_concentration(y0, **params):
+def plot_model_concentration(y0, MIC, **params):
     #Input:
     #y0 - initial conditions
     # params - dictionary containing additional parameters (e.g., tau, dose_interval, end_time, method)
 
     if params["method"] == "First order":
         dose_times = np.arange(6, 24*3, params["dose_interval"])
-        t, b, s, _, _, _, _, _ = simulate_two_stage_ode(y0, params["tau"], params["B"], params["a"],
+        t, b, s, min, _, _, _, _ = simulate_two_stage_ode(y0, params["tau"], params["B"], params["a"],
                                                         params["k"], dose_times, params["end_time"])
     elif params["method"] == "Michaelis-Menten":
         dose_times = np.arange(6, 24*3, params["dose_interval"])
@@ -22,15 +22,15 @@ def plot_model_concentration(y0, **params):
     plt.figure()
     plt.plot(t, b, label = 'Antibiotics in bloodstream', color = 'red')
     plt.plot(t, s, label = 'Antibiotics in stomach',alpha = 0.2, color = 'blue')
-
-
+    plt.axhline(y=MIC, color='magenta', linestyle = '--', label = 'MIC')
+    print(min)
     plt.xlabel('t')
     plt.ylabel('s,b')
-    plt.title('Two stage model')
+    plt.title(f'Two stage model {params["method"]}')
     plt.legend()
 
     
-def analyze_model(variable_name, variable_values, y0, **params):
+def analyze_model(variable_name, variable_values, y0, MIC, **params):
     #Input:
     # variable_name: str, the variable to analyze (e.g., "B", "Vmax", "km")
     # variable_values: list, the values of the changing parameter to analyze
@@ -40,12 +40,14 @@ def analyze_model(variable_name, variable_values, y0, **params):
     minima_list = []
     maxima_list = []
     means_list  = []
+    time_to_peak_list = []
+    params["end_time"] = 24*7
 
     for value in variable_values:
         params[variable_name] = value
         
-        dose_times = np.arange(1, 24*3, params["dose_interval"])
-
+        dose_times = np.arange(1, 24*6, params["dose_interval"])
+        
         if params["method"] == "First order":
             _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(
                 y0, params["tau"], params["B"], params["a"], params["k"], dose_times, params["end_time"]
@@ -54,20 +56,38 @@ def analyze_model(variable_name, variable_values, y0, **params):
             _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_Michaelis_Menten_ode(
                 y0, params["tau"], params["B"], params["Vmax"], params["km"], params["k"], dose_times, params["end_time"]
             )
-
-        minima_list.append(minima[-2])
-        maxima_list.append(maxima[-2])
-        means_list.append(means[-2])
+        epsilon = 1e-3
+        if (np.isclose(minima[-2], minima[-3], atol=epsilon) and np.isclose(maxima[-2], maxima[-3], atol=epsilon) and
+            np.isclose(means[-2], means[-3], atol=epsilon) and np.isclose(time_to_peak[-2], time_to_peak[-3], atol=epsilon) ):
+            minima_list.append(minima[-2])
+            maxima_list.append(maxima[-2])
+            means_list.append(means[-2])
+            time_to_peak_list.append(time_to_peak[-2])
+        else:
+            print("\033[91mWarning: The steady state has not been reached yet. \033[0m")
+            print(f'k value is {params["k"]}')
+            minima_list.append(minima[-2])
+            maxima_list.append(maxima[-2])
+            means_list.append(means[-2])
+            time_to_peak_list.append(time_to_peak[-2])
     
     plt.figure()
-    plt.scatter(variable_values, minima_list, label='minima',color='green')
+    plt.scatter(variable_values, minima_list, label='minima',color='magenta')
     plt.scatter(variable_values, means_list, label='mean',color='orange')
     plt.plot(variable_values, means_list,color='orange')
-    plt.scatter(variable_values, maxima_list, label='maxima',color='red')
+    plt.scatter(variable_values, maxima_list, label='maxima',color='blue')
+    plt.axhline(y=MIC, color='red', linestyle = '--', label = 'MIC')
     plt.xlabel(f'{variable_name} values')
     plt.ylabel('Max/Min concentration')
     plt.legend()
     plt.title(f'Analysis ({params["method"]}) of {variable_name}')
+
+    plt.figure()
+    plt.plot(variable_values, time_to_peak_list)
+    plt.xlabel(f'{variable_name} values')
+    plt.ylabel('Time to peak')
+    plt.title(f'Peak times ({params["method"]})')
+
 
 #Set some parameters
 T12 = 1.5         #half-life of antibiotica in [h]
@@ -77,6 +97,7 @@ a = 1             #absorption rate of antibiotics in the stomach [in 1/h] (need 
 
 Vmax = 1220
 km = 287
+MIC = 0.2
 
 D = 250           #dosis of an antibiotics pill in [mg]
 tau = 24          #rescaling with respect to [24h]
@@ -87,7 +108,7 @@ k = tau*k
 Vmax = Vmax*tau/D
 km = km/D
 
-dose_times = np.arange(6, 24*3 + 1, 6)
+dose_times = np.arange(1, 24*3 + 1, 6)
 end_time = 24*4
 
 #Create dictionaries for the two models to analyze
@@ -116,30 +137,32 @@ params_Michaelis_Menten = {
 
 y0 = [0,0] #initial condotions
 
-analyzing = False
+analyzing = True
 if analyzing:
-    plot_model_concentration(y0, **params_first_order)
+    #plot_model_concentration(y0, MIC, **params_first_order)
+
+    #plot_model_concentration(y0, MIC, **params_Michaelis_Menten)
 
     dose_intervals = np.arange(1, 12, 1)
-    analyze_model("dose_interval", dose_intervals, y0, **params_first_order)
+    #analyze_model("dose_interval", dose_intervals, y0, MIC, **params_first_order)
 
-    absorption_values = np.arange(0.1, 10, 0.1)
-    analyze_model("a",absorption_values, y0,**params_first_order)
-
-    elimination_values = np.arange(0.1, 10, 0.1)
-    analyze_model("k", elimination_values,y0,**params_first_order)
-
-    Vmax_values = np.arange(0.1, 10, 0.1)
-    analyze_model("Vmax",Vmax_values,y0,**params_Michaelis_Menten)
-
-    km_values = np.arange(0.1, 10, 0.1)
-    analyze_model("km", km_values,y0, **params_Michaelis_Menten)
+    absorption_values = np.arange(0.1, 50, 0.1)
+    #analyze_model("a",absorption_values, y0, MIC, **params_first_order)
 
     elimination_values = np.arange(0.1, 10, 0.1)
-    analyze_model("k", elimination_values,y0,**params_Michaelis_Menten)
+    analyze_model("k", elimination_values,y0, MIC, **params_first_order)
+
+    Vmax_values = np.arange(0.1, 50, 0.1)
+    #analyze_model("Vmax",Vmax_values,y0, MIC, **params_Michaelis_Menten)
+
+    km_values = np.arange(0.1, 100, 0.1)
+    #analyze_model("km", km_values,y0, MIC, **params_Michaelis_Menten)
+
+    elimination_values = np.arange(0.1, 10, 0.1)
+    #analyze_model("k", elimination_values,y0, MIC, **params_Michaelis_Menten)
 
 
-heatmap = True
+heatmap = False
 if heatmap:
 
 
@@ -217,11 +240,13 @@ if heatmap:
 
     #Plot heatmaps with seaborn
     sns.set_theme(style='white',font_scale=1.0) # Seaborn style setting
+    vmin = 0.0
+    vmax = 5.0 
 
+    #ticks would be Vmax and km
     #Minima heatmap
     plt.figure()
-    sns.heatmap(minima_values, annot=annot, fmt=".2f", cmap ='viridis',
-                xticklabels=np.round(Vmax_values, 1), yticklabels=np.round(km_values, 1),
+    sns.heatmap(minima_values, vmin = vmin, vmax = vmax, annot=annot, fmt=".2f", cmap ='viridis',
                 cbar_kws={'label': 'Minima concentration'})
     plt.title('Minima concentration')
     plt.xlabel('$V_{max}$')
@@ -229,8 +254,7 @@ if heatmap:
 
     #Maxima heatmap
     plt.figure()
-    sns.heatmap(maxima_values, annot=annot, fmt=".2f", cmap ='viridis',
-                xticklabels=np.round(Vmax_values, 1), yticklabels=np.round(km_values, 1),
+    sns.heatmap(maxima_values, vmin = vmin, vmax = vmax, annot=annot, fmt=".2f", cmap ='viridis',
                 cbar_kws={'label': 'Maxima concentration'})
     plt.title('Maxima concentration')
     plt.xlabel('$V_{max}$')
@@ -238,8 +262,7 @@ if heatmap:
 
     #Mean heatmap
     plt.figure()
-    sns.heatmap(mean_values, annot=annot, fmt=".2f", cmap ='viridis',
-                xticklabels=np.round(Vmax_values, 1), yticklabels=np.round(km_values, 1),
+    sns.heatmap(mean_values, annot=annot, vmin = vmin, vmax = vmax, fmt=".2f", cmap ='viridis',
                 cbar_kws={'label': 'Mean concentration'})
     plt.title('Mean concentration')
     plt.xlabel('$V_{max}$')
