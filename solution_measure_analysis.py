@@ -53,6 +53,7 @@ def sensitive_analysis(variable_name, variable_values, y0, MIC, **params):
             )
 
         plt.plot(t, b, label = f'{variable_name} = {np.round(value, 2)}')
+        plt.plot(t, s, label = f'{variable_name} = {np.round(value,2)}', linestyle = '--')
         
     plt.axhline(y = MIC, label = "MIC", linestyle = '--', color = 'magenta')
     plt.xlabel('t')
