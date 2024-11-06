@@ -8,6 +8,7 @@ import seaborn as sns
 def plot_model_concentration(y0, MIC, **params):
     #Input:
     #y0 - initial conditions
+    #MIC - inhibitory conditional analysis
     # params - dictionary containing additional parameters (e.g., tau, dose_interval, end_time, method)
 
     if params["method"] == "First order":
@@ -29,7 +30,36 @@ def plot_model_concentration(y0, MIC, **params):
     plt.title(f'Two stage model {params["method"]}')
     plt.legend()
 
-    
+def sensitive_analysis(variable_name, variable_values, y0, MIC, **params):
+    #Input:
+    # y0 - initial conditions
+    # variable_name: str, the variable to analyze (e.g., "B", "Vmax", "km")
+    # variable_values: list, the values of the changing parameter to analyze
+    # params - dictionary containing additional parameters (e.g., tau, dose_interval, end_time, method)
+    # MIC - minimum inhibitory concentration
+    dose_times = np.arange(6, 24*3, params["dose_interval"])
+    plt.figure()
+
+    for value in variable_values:
+        params[variable_name] = value
+
+        if params["method"] == "First order":
+            t, b, s, _, _, _, _, _ = simulate_two_stage_ode(
+                y0, params["tau"], params["B"], params["a"], params["k"], dose_times, params["end_time"]
+            )
+        elif params["method"] == "Michaelis-Menten":
+            t, b, s, _, _, _, _, _= simulate_two_stage_Michaelis_Menten_ode(
+                y0, params["tau"], params["B"], params["Vmax"], params["km"], params["k"], dose_times, params["end_time"]
+            )
+
+        plt.plot(t, b, label = f'{variable_name} = {np.round(value, 2)}')
+        
+    plt.axhline(y = MIC, label = "MIC", linestyle = '--', color = 'magenta')
+    plt.xlabel('t')
+    plt.ylabel('s,b')
+    plt.title(f'Two stage model ({params["method"]})')
+    plt.legend()
+
 def analyze_model(variable_name, variable_values, y0, MIC, **params):
     #Input:
     # variable_name: str, the variable to analyze (e.g., "B", "Vmax", "km")
@@ -41,12 +71,12 @@ def analyze_model(variable_name, variable_values, y0, MIC, **params):
     maxima_list = []
     means_list  = []
     time_to_peak_list = []
-    params["end_time"] = 24*7
+    params["end_time"] = 24*7 + 6
 
     for value in variable_values:
         params[variable_name] = value
         
-        dose_times = np.arange(1, 24*6, params["dose_interval"])
+        dose_times = np.arange(1, 24*7, params["dose_interval"])
         
         if params["method"] == "First order":
             _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(
@@ -65,7 +95,7 @@ def analyze_model(variable_name, variable_values, y0, MIC, **params):
             time_to_peak_list.append(time_to_peak[-2])
         else:
             print("\033[91mWarning: The steady state has not been reached yet. \033[0m")
-            print(f'k value is {params["k"]}')
+            print(f'{variable_name} value is {params[variable_name]}')
             minima_list.append(minima[-2])
             maxima_list.append(maxima[-2])
             means_list.append(means[-2])
@@ -143,16 +173,19 @@ if analyzing:
 
     #plot_model_concentration(y0, MIC, **params_Michaelis_Menten)
 
+    B_values = np.arange(0.1, 1, 0.2)
+    sensitive_analysis("B", B_values, y0, MIC, **params_first_order)
+
     dose_intervals = np.arange(1, 12, 1)
     #analyze_model("dose_interval", dose_intervals, y0, MIC, **params_first_order)
 
-    absorption_values = np.arange(0.1, 50, 0.1)
+    absorption_values = np.arange(0.1, 10, 0.1)
     #analyze_model("a",absorption_values, y0, MIC, **params_first_order)
 
     elimination_values = np.arange(0.1, 10, 0.1)
-    analyze_model("k", elimination_values,y0, MIC, **params_first_order)
+    #analyze_model("k", elimination_values,y0, MIC, **params_first_order)
 
-    Vmax_values = np.arange(0.1, 50, 0.1)
+    Vmax_values = np.arange(0.1, 10, 0.1)
     #analyze_model("Vmax",Vmax_values,y0, MIC, **params_Michaelis_Menten)
 
     km_values = np.arange(0.1, 100, 0.1)
