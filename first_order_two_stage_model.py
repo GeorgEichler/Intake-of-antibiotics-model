@@ -80,8 +80,8 @@ if __name__ == '__main__':
     plt.subplots_adjust(left=0.25, bottom=0.25)
     b_line, = plt.plot(t, b, label='Antibiotics in bloodstream', color = 'red')
     s_line, = plt.plot(t, s, label='Antibiotics in stomach', alpha=0.2, color = 'blue')
-    plt.xlabel('Time')
-    plt.ylabel('Concentration')
+    plt.xlabel('t')
+    plt.ylabel('b,s')
     plt.legend()
 
     # Add sliders for parameters
@@ -91,8 +91,8 @@ if __name__ == '__main__':
     ax_k = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
 
     slider_B = Slider(ax_B, 'Bioavailability (B)', 0.1, 1.5, valinit=B)
-    slider_a = Slider(ax_a, 'Absorption rate (a)', 0.1, 100, valinit=a)
-    slider_k = Slider(ax_k, 'Elimination rate (k)', 0.01, 100, valinit=k)
+    slider_a = Slider(ax_a, 'Absorption rate (a)', 0.1, 200, valinit=a)
+    slider_k = Slider(ax_k, 'Elimination rate (k)', 0.01, 200, valinit=k)
 
     # Update function for sliders
     def update(val):
