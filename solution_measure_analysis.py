@@ -36,6 +36,7 @@ def sensitive_analysis(variable_name, variable_values, y0, MIC, **params):
     # variable_values: list, the values of the changing parameter to analyze
     # params - dictionary containing additional parameters (e.g., tau, dose_interval, end_time, method)
     # MIC - minimum inhibitory concentration
+    fontsize = 14
     params["dose_interval"] = 8
     dose_times = np.arange(8, 24*3+1, params["dose_interval"])
     params["end_time"] = 24*4 + 12
@@ -59,13 +60,17 @@ def sensitive_analysis(variable_name, variable_values, y0, MIC, **params):
         plt.plot(t, b, label = f'{variable_name} = {np.round(value, 2)}', color = color)
         #plt.plot(t, s, label = f'{variable_name} = {np.round(value,2)}', linestyle = '--', color = color)
     
-    xticks = np.arange(0, 4, 0.25)  # Adjust the range to fit your x-axis limits
-    #plt.xticks(xticks, labels=[f'{tick:.2f}' for tick in xticks], rotation=45)
-    #plt.axhline(y = MIC, label = "MIC", linestyle = '--', color = 'magenta')
-    plt.xlabel('t')
-    plt.ylabel('s,b')
-    plt.title(f'Two stage model ({params["method"]})')
-    plt.legend()
+    xticks = np.arange(0.3, 0.8, 0.1)  # Adjust the range to fit your x-axis limits
+    plt.xticks(xticks, labels=[f'{tick:.2f}' for tick in xticks], rotation=45)
+    
+    plt.xlim(0.3, 0.7)
+    plt.ylim(0, 1)
+    plt.xticks(fontsize = fontsize)
+    plt.yticks(fontsize = fontsize)
+    plt.xlabel('t',fontsize = fontsize)
+    plt.ylabel('b', fontsize=fontsize)
+    #plt.title(f'Two stage model ({params["method"]})')
+    plt.legend(fontsize=fontsize)
 
 def analyze_model(variable_name, variable_values, y0, MIC, **params):
     #Input:
