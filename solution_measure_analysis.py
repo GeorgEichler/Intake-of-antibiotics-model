@@ -13,18 +13,17 @@ def plot_model_concentration(y0, MIC, **params):
 
     if params["method"] == "First order":
         dose_times = np.arange(6, 24*3, params["dose_interval"])
-        t, b, s, min, _, _, _, _ = simulate_two_stage_ode(y0, params["tau"], params["B"], params["a"],
-                                                        params["k"], dose_times, params["end_time"])
+        t, b, s, min, _, _, _, _ = simulate_two_stage_ode(y0, params["tau"], params["B"], params["$k_{abs}$"],
+                                                        params["$k_{el}$"], dose_times, params["end_time"])
     elif params["method"] == "Michaelis-Menten":
         dose_times = np.arange(6, 24*3, params["dose_interval"])
-        t, b, s, _, _, _, _, _ = simulate_two_stage_Michaelis_Menten_ode(y0, params["tau"], params["B"], params["Vmax"],
-                                                                        params["km"], params["k"], dose_times, params["end_time"])
+        t, b, s, _, _, _, _, _ = simulate_two_stage_Michaelis_Menten_ode(y0, params["tau"], params["B"], params["$V_{max}$"],
+                                                                        params["$k_{m}$"], params["$k_{el}$"], dose_times, params["end_time"])
     
     plt.figure()
     plt.plot(t, b, label = 'Antibiotics in bloodstream', color = 'red')
     plt.plot(t, s, label = 'Antibiotics in stomach',alpha = 0.2, color = 'blue')
     plt.axhline(y=MIC, color='magenta', linestyle = '--', label = 'MIC')
-    print(min)
     plt.xlabel('t')
     plt.ylabel('s,b')
     plt.title(f'Two stage model {params["method"]}')
@@ -37,7 +36,9 @@ def sensitive_analysis(variable_name, variable_values, y0, MIC, **params):
     # variable_values: list, the values of the changing parameter to analyze
     # params - dictionary containing additional parameters (e.g., tau, dose_interval, end_time, method)
     # MIC - minimum inhibitory concentration
-    dose_times = np.arange(6, 24*3, params["dose_interval"])
+    params["dose_interval"] = 8
+    dose_times = np.arange(8, 24*3+1, params["dose_interval"])
+    params["end_time"] = 24*4 + 12
     plt.figure()
 
     for value in variable_values:
@@ -45,17 +46,22 @@ def sensitive_analysis(variable_name, variable_values, y0, MIC, **params):
 
         if params["method"] == "First order":
             t, b, s, _, _, _, _, _ = simulate_two_stage_ode(
-                y0, params["tau"], params["B"], params["a"], params["k"], dose_times, params["end_time"]
+                y0, params["tau"], params["B"], params["$k_{abs}$"], params["$k_{el}$"], dose_times, params["end_time"]
             )
         elif params["method"] == "Michaelis-Menten":
             t, b, s, _, _, _, _, _= simulate_two_stage_Michaelis_Menten_ode(
-                y0, params["tau"], params["B"], params["Vmax"], params["km"], params["k"], dose_times, params["end_time"]
+                y0, params["tau"], params["B"], params["$V_{max}$"], params["$k_{m}$"], params["$k_{el}$"], dose_times, params["end_time"]
             )
 
-        plt.plot(t, b, label = f'{variable_name} = {np.round(value, 2)}')
-        plt.plot(t, s, label = f'{variable_name} = {np.round(value,2)}', linestyle = '--')
-        
-    plt.axhline(y = MIC, label = "MIC", linestyle = '--', color = 'magenta')
+        # Get the next color from the color cycle
+        color = plt.gca()._get_lines.get_next_color()
+
+        plt.plot(t, b, label = f'{variable_name} = {np.round(value, 2)}', color = color)
+        #plt.plot(t, s, label = f'{variable_name} = {np.round(value,2)}', linestyle = '--', color = color)
+    
+    xticks = np.arange(0, 4, 0.25)  # Adjust the range to fit your x-axis limits
+    #plt.xticks(xticks, labels=[f'{tick:.2f}' for tick in xticks], rotation=45)
+    #plt.axhline(y = MIC, label = "MIC", linestyle = '--', color = 'magenta')
     plt.xlabel('t')
     plt.ylabel('s,b')
     plt.title(f'Two stage model ({params["method"]})')
@@ -81,11 +87,11 @@ def analyze_model(variable_name, variable_values, y0, MIC, **params):
         
         if params["method"] == "First order":
             _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_ode(
-                y0, params["tau"], params["B"], params["a"], params["k"], dose_times, params["end_time"]
+                y0, params["tau"], params["B"], params["$k_{abs}$"], params["$k_{el}$"], dose_times, params["end_time"]
             )
         elif params["method"] == "Michaelis-Menten":
             _, _, _, minima, maxima, b_auc, means, time_to_peak = simulate_two_stage_Michaelis_Menten_ode(
-                y0, params["tau"], params["B"], params["Vmax"], params["km"], params["k"], dose_times, params["end_time"]
+                y0, params["tau"], params["B"], params["$V_{max}$"], params["$k_{m}$"], params["$k_{el}$"], dose_times, params["end_time"]
             )
         epsilon = 1e-3
         if (np.isclose(minima[-2], minima[-3], atol=epsilon) and np.isclose(maxima[-2], maxima[-3], atol=epsilon) and
@@ -135,6 +141,7 @@ tau = 24          #rescaling with respect to [24h]
 
 #non-dimensionalize
 a = tau*a
+a = 10
 k = tau*k
 Vmax = Vmax*tau/D
 km = km/D
@@ -148,8 +155,8 @@ params_first_order = {
     "method": "First order",
     "tau": tau,
     "B": B,
-    "a": a,
-    "k": k,
+    "$k_{abs}$": a,
+    "$k_{el}$": k,
     "dose_interval": 6,
     "end_time": end_time
 }
@@ -159,9 +166,9 @@ params_Michaelis_Menten = {
     "method": "Michaelis-Menten",
     "tau": tau,
     "B": B,
-    "Vmax": Vmax,
-    "km": km,
-    "k": k,
+    "$V_{max}$": Vmax,
+    "$k_{m}$": km,
+    "$k_{el}$": k,
     "dose_interval": 6,
     "end_time": end_time,
 }
@@ -175,25 +182,31 @@ if analyzing:
     #plot_model_concentration(y0, MIC, **params_Michaelis_Menten)
 
     B_values = np.arange(0.1, 1, 0.2)
-    sensitive_analysis("B", B_values, y0, MIC, **params_first_order)
+    #sensitive_analysis("B", B_values, y0, MIC, **params_first_order)
+
+    absorption_values = np.array([0.1, 1, 10, 100, 1000])
+    #sensitive_analysis("$k_{abs}$", absorption_values, y0, MIC, **params_first_order)
+
+    elimination_values = np.array([0.1, 1, 10, 50, 100])
+    sensitive_analysis("$k_{el}$", elimination_values, y0, MIC, **params_first_order)
 
     dose_intervals = np.arange(1, 12, 1)
     #analyze_model("dose_interval", dose_intervals, y0, MIC, **params_first_order)
 
-    absorption_values = np.arange(0.1, 10, 0.1)
-    #analyze_model("a",absorption_values, y0, MIC, **params_first_order)
+    absorption_values = np.arange(1, 100, 1)
+    #analyze_model("$k_{abs}$",absorption_values, y0, MIC, **params_first_order)
 
     elimination_values = np.arange(0.1, 10, 0.1)
-    #analyze_model("k", elimination_values,y0, MIC, **params_first_order)
+    #analyze_model("k_{abs}", elimination_values,y0, MIC, **params_first_order)
 
     Vmax_values = np.arange(0.1, 10, 0.1)
-    #analyze_model("Vmax",Vmax_values,y0, MIC, **params_Michaelis_Menten)
+    #analyze_model("$V_{max}$",Vmax_values,y0, MIC, **params_Michaelis_Menten)
 
-    km_values = np.arange(0.1, 100, 0.1)
-    #analyze_model("km", km_values,y0, MIC, **params_Michaelis_Menten)
+    km_values = np.arange(10, 200, 10)
+    #analyze_model("$k_{m}$", km_values,y0, MIC, **params_Michaelis_Menten)
 
     elimination_values = np.arange(0.1, 10, 0.1)
-    #analyze_model("k", elimination_values,y0, MIC, **params_Michaelis_Menten)
+    #analyze_model("$k_{el}$", elimination_values,y0, MIC, **params_Michaelis_Menten)
 
 
 heatmap = False
