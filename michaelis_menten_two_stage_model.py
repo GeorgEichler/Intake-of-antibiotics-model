@@ -81,6 +81,10 @@ if __name__ == '__main__':
     km = km/D
     k = k*tau
 
+    Vmax = 10
+    km = 0.1
+    k = 10
+
     dose_times = np.arange(6, 24*3+1, 6)
     end_time = 24*4
     
@@ -101,9 +105,9 @@ if __name__ == '__main__':
     ax_km = plt.axes([0.25, 0.10, 0.65, 0.03], facecolor=axcolor)
     ax_k = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
 
-    slider_Vmax = Slider(ax_Vmax, 'Maximal absorption (Vmax)', 0.1, 1000, valinit=Vmax)
-    slider_km = Slider(ax_km, 'Half concentration (km)', 0.01, 100, valinit=km)
-    slider_k = Slider(ax_k, 'Elimination rate (k)', 0.1, 100, valinit=k)
+    slider_Vmax = Slider(ax_Vmax, 'Maximal absorption (Vmax)', 1, 100, valinit=Vmax)
+    slider_km = Slider(ax_km, 'Half concentration (km)', 0.1, 10, valinit=km)
+    slider_k = Slider(ax_k, 'Elimination rate (k)', 1, 50, valinit=k)
 
     #Update function for sliders
     def update(val):
