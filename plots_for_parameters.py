@@ -24,7 +24,7 @@ font_size_legend = 14
 
 # First plot: Exponential decay for half-life with marked half-life time as t_{1/2}
 plt.figure(figsize=(8, 5))
-plt.plot(t, half_life_decay, color="blue")
+plt.plot(t, half_life_decay, color="blue", label = 'Antibiotics concentration')
 plt.axhline(0.5, color="gray", linestyle="--", label="Half-life")
 plt.axvline(half_life_time, color="black", linestyle="--")  # Vertical line for half-life time
 plt.xticks([0, 2, 4, 6, 8, 10, half_life_time], labels=[0, 2, 4, 6, 8, 10, r"$t_{1/2}$"],
@@ -40,7 +40,7 @@ plt.grid(True)
 
 # Second plot: Concentration profile with MIC, AUC, and marked peak time as t_{peak}
 plt.figure(figsize=(8, 5))
-plt.plot(t, concentration_profile, color="red")
+plt.plot(t, concentration_profile, color="red", label = 'Antibiotics in bloodstream')
 # Fill area under the curve for AUC
 plt.fill_between(t, concentration_profile, where=(t <= 10), color="blue", alpha=0.2, label="AUC")
 # Horizontal line for MIC
