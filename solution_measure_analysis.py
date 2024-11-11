@@ -10,9 +10,10 @@ def plot_model_concentration(y0, MIC, **params):
     #y0 - initial conditions
     #MIC - inhibitory conditional analysis
     # params - dictionary containing additional parameters (e.g., tau, dose_interval, end_time, method)
-
+    fontsize = 14
+    params["end_time"] = 24*4 + 12
     if params["method"] == "First order":
-        dose_times = np.arange(6, 24*3, params["dose_interval"])
+        dose_times = np.arange(8, 24*3+1, params["dose_interval"])
         t, b, s, min, _, _, _, _ = simulate_two_stage_ode(y0, params["tau"], params["B"], params["$k_{abs}$"],
                                                         params["$k_{el}$"], dose_times, params["end_time"])
     elif params["method"] == "Michaelis-Menten":
@@ -22,12 +23,15 @@ def plot_model_concentration(y0, MIC, **params):
     
     plt.figure()
     plt.plot(t, b, label = 'Antibiotics in bloodstream', color = 'red')
-    plt.plot(t, s, label = 'Antibiotics in stomach',alpha = 0.2, color = 'blue')
-    plt.axhline(y=MIC, color='magenta', linestyle = '--', label = 'MIC')
-    plt.xlabel('t')
-    plt.ylabel('s,b')
-    plt.title(f'Two stage model {params["method"]}')
-    plt.legend()
+    plt.plot(t, s, label = 'Antibiotics in stomach',alpha = 0.3, color = 'blue')
+    #plt.axhline(y=MIC, color='magenta', linestyle = '--', label = 'MIC')
+    plt.xticks(fontsize = fontsize)
+    plt.yticks(fontsize = fontsize)
+    plt.ylim(0, 1.5)
+    plt.xlabel('t',fontsize = fontsize)
+    plt.ylabel('s,b', fontsize = fontsize)
+    #plt.title(f'Two stage model {params["method"]}')
+    plt.legend(fontsize = fontsize)
 
 def sensitive_analysis(variable_name, variable_values, y0, MIC, **params):
     #Input:
@@ -57,18 +61,26 @@ def sensitive_analysis(variable_name, variable_values, y0, MIC, **params):
         # Get the next color from the color cycle
         color = plt.gca()._get_lines.get_next_color()
 
+
+        #Default wise both plots appear, comment one plot out to focus on stomach/bloodstream concentration
         plt.plot(t, b, label = f'{variable_name} = {np.round(value, 2)}', color = color)
-        #plt.plot(t, s, label = f'{variable_name} = {np.round(value,2)}', linestyle = '--', color = color)
+        plt.plot(t, s, label = f'{variable_name} = {np.round(value,2)}', linestyle = '-', color = color)
     
-    xticks = np.arange(0.3, 0.8, 0.1)  # Adjust the range to fit your x-axis limits
-    plt.xticks(xticks, labels=[f'{tick:.2f}' for tick in xticks], rotation=45)
-    
-    plt.xlim(0.3, 0.7)
-    plt.ylim(0, 1)
+    #Uncomment for different axis settings
+    #xticks = np.arange(0.3, 0.8, 0.1)  # Adjust the range to fit your x-axis limits
+    #plt.xticks(xticks, labels=[f'{tick:.2f}' for tick in xticks])
+    #plt.xlim(0.3, 0.7)
+
+    #plt.ylim(0, 1.1)
+
     plt.xticks(fontsize = fontsize)
     plt.yticks(fontsize = fontsize)
     plt.xlabel('t',fontsize = fontsize)
-    plt.ylabel('b', fontsize=fontsize)
+
+    #Choose appropriate labeling for plot
+    #plt.ylabel('b', fontsize=fontsize)
+    #plt.ylabel('s', fontsize=fontsize)
+    plt.ylabel('s,b', fontsize=fontsize)
     #plt.title(f'Two stage model ({params["method"]})')
     plt.legend(fontsize=fontsize)
 
@@ -79,6 +91,7 @@ def analyze_model(variable_name, variable_values, y0, MIC, **params):
     # y0: list, initial conditions for the ODE
     # params: dict, additional parameters needed for the ODE (e.g., "tau", "dose_interval", "end_time", method)
     # method parameter is either First order or Michaelis-Menten
+    fontsize = 14
     minima_list = []
     maxima_list = []
     means_list  = []
@@ -114,19 +127,33 @@ def analyze_model(variable_name, variable_values, y0, MIC, **params):
             time_to_peak_list.append(time_to_peak[-2])
     
     plt.figure()
-    plt.scatter(variable_values, minima_list, label='minima',color='magenta')
-    plt.scatter(variable_values, means_list, label='mean',color='orange')
-    plt.plot(variable_values, means_list,color='orange')
-    plt.scatter(variable_values, maxima_list, label='maxima',color='blue')
+    #Change between scatter and lineplot if needed for visualisation
+    plt.plot(variable_values, minima_list, label='Minimum',color='magenta')
+    #plt.scatter(variable_values, means_list, label='Mean',color='orange')
+    plt.plot(variable_values, means_list,color='orange', label = 'Mean')
+    plt.plot(variable_values, maxima_list, label='Maximum',color='blue')
     plt.axhline(y=MIC, color='red', linestyle = '--', label = 'MIC')
-    plt.xlabel(f'{variable_name} values')
-    plt.ylabel('Max/Min concentration')
-    plt.legend()
-    plt.title(f'Analysis ({params["method"]}) of {variable_name}')
 
+    #Special label for dose interval
+    #plt.xlabel('Dose interval [h]', fontsize = fontsize)
+
+    plt.xlabel(f'{variable_name}', fontsize = fontsize)
+    plt.ylabel('Concentration', fontsize = fontsize)
+
+    #Set optional axis settings for plots for plots
+    #xticks = np.arange(5, 51, 5)  # Adjust the range to fit your x-axis limits
+    #plt.xticks(xticks, labels=[f'{tick:.0f}' for tick in xticks])
+    #plt.ylim(0, 2.5)
+
+    plt.xticks(fontsize = fontsize)
+    plt.yticks(fontsize = fontsize)
+    plt.legend(fontsize = fontsize)
+    #plt.title(f'Analysis ({params["method"]}) of {variable_name}')
+
+    #Peak time analysis
     plt.figure()
     plt.plot(variable_values, time_to_peak_list)
-    plt.xlabel(f'{variable_name} values')
+    plt.xlabel(f'{variable_name}')
     plt.ylabel('Time to peak')
     plt.title(f'Peak times ({params["method"]})')
 
@@ -139,20 +166,23 @@ a = 1             #absorption rate of antibiotics in the stomach [in 1/h] (need 
 
 Vmax = 1220
 km = 287
-MIC = 0.2
+MIC = 0.1
 
 D = 250           #dosis of an antibiotics pill in [mg]
 tau = 24          #rescaling with respect to [24h]
 
-#non-dimensionalize
+#non-dimensionalised parameters
 a = tau*a
-a = 10
 k = tau*k
-Vmax = Vmax*tau/D
-km = km/D
 
-dose_times = np.arange(1, 24*3 + 1, 6)
-end_time = 24*4
+a = 10
+k = 10
+Vmax = 10
+km = 0.1
+
+dose_times = np.arange(8, 24*3 + 1, 8)
+dose_interval = 8
+end_time = 24*4 + 12
 
 #Create dictionaries for the two models to analyze
 #Dictionary with parameters for the first order model
@@ -162,7 +192,7 @@ params_first_order = {
     "B": B,
     "$k_{abs}$": a,
     "$k_{el}$": k,
-    "dose_interval": 6,
+    "dose_interval": dose_interval,
     "end_time": end_time
 }
 
@@ -174,46 +204,56 @@ params_Michaelis_Menten = {
     "$V_{max}$": Vmax,
     "$k_{m}$": km,
     "$k_{el}$": k,
-    "dose_interval": 6,
+    "dose_interval": dose_interval,
     "end_time": end_time,
 }
 
 y0 = [0,0] #initial condotions
 
+#display analyzing plots
 analyzing = True
 if analyzing:
-    #plot_model_concentration(y0, MIC, **params_first_order)
+    plot_model_concentration(y0, MIC, **params_first_order)
 
-    #plot_model_concentration(y0, MIC, **params_Michaelis_Menten)
+    plot_model_concentration(y0, MIC, **params_Michaelis_Menten)
 
     B_values = np.arange(0.1, 1, 0.2)
-    #sensitive_analysis("B", B_values, y0, MIC, **params_first_order)
+    sensitive_analysis("B", B_values, y0, MIC, **params_first_order)
 
-    absorption_values = np.array([0.1, 1, 10, 100, 1000])
-    #sensitive_analysis("$k_{abs}$", absorption_values, y0, MIC, **params_first_order)
+    absorption_values = np.array([0.1, 1, 5, 10, 50])
+    sensitive_analysis("$k_{abs}$", absorption_values, y0, MIC, **params_first_order)
 
     elimination_values = np.array([0.1, 1, 10, 50, 100])
     sensitive_analysis("$k_{el}$", elimination_values, y0, MIC, **params_first_order)
 
-    dose_intervals = np.arange(1, 12, 1)
-    #analyze_model("dose_interval", dose_intervals, y0, MIC, **params_first_order)
-
-    absorption_values = np.arange(1, 100, 1)
-    #analyze_model("$k_{abs}$",absorption_values, y0, MIC, **params_first_order)
-
-    elimination_values = np.arange(0.1, 10, 0.1)
-    #analyze_model("k_{abs}", elimination_values,y0, MIC, **params_first_order)
-
-    Vmax_values = np.arange(0.1, 10, 0.1)
-    #analyze_model("$V_{max}$",Vmax_values,y0, MIC, **params_Michaelis_Menten)
-
-    km_values = np.arange(10, 200, 10)
-    #analyze_model("$k_{m}$", km_values,y0, MIC, **params_Michaelis_Menten)
-
-    elimination_values = np.arange(0.1, 10, 0.1)
-    #analyze_model("$k_{el}$", elimination_values,y0, MIC, **params_Michaelis_Menten)
+    Vmax_values = np.array([0.1, 1, 10, 100, 1000])
+    for km in [0.1, 1, 5, 10]:
+        params_Michaelis_Menten["$k_{m}$"] = km
+        #sensitive_analysis("$V_{max}$", Vmax_values, y0, MIC, **params_Michaelis_Menten)
 
 
+    dose_intervals = np.arange(5, 24, 1)
+    analyze_model("dose_interval", dose_intervals, y0, MIC, **params_first_order)
+    analyze_model("dose_interval", dose_intervals, y0, MIC, **params_Michaelis_Menten)
+
+
+    elimination_values = np.arange(1, 50, 0.1)
+    analyze_model("$k_{el}$", elimination_values,y0, MIC, **params_first_order)
+    
+    elimination_values = np.arange(1, 50, 0.1)
+    analyze_model("$k_{el}$", elimination_values,y0, MIC, **params_Michaelis_Menten)
+
+    absorption_values = np.arange(1, 50, 0.1)
+    analyze_model("$k_{abs}$",absorption_values, y0, MIC, **params_first_order)
+
+    Vmax_values = np.arange(10, 50, 0.1)
+    analyze_model("$V_{max}$",Vmax_values,y0, MIC, **params_Michaelis_Menten)
+
+    km_values = np.arange(0.1, 50, 1)
+    analyze_model("$k_{m}$", km_values,y0, MIC, **params_Michaelis_Menten)
+
+
+#display heatmaps
 heatmap = False
 if heatmap:
 
